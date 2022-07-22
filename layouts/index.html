@@ -1,0 +1,16 @@
+{{ define "main" }}
+
+<div class="posts section">
+    {{ $pages := where site.RegularPages "Type" "in" site.Params.mainSections }}
+    {{ range $pages.ByPublishDate.Reverse }}
+    <article>
+        <h3>{{ .Title }}</h3>
+        {{ partial "metadata.html" . }}
+        <p>{{ .Summary }}</p>
+        <a href="{{ .RelPermalink }}">Read more</a>
+        <hr>
+    </article>
+    {{ end }}
+</div>
+
+{{ end }}
