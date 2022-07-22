@@ -1,0 +1,13 @@
+{{ define "main" }}
+
+<div class="projects section">
+    <h1 class="title">Projects</h1>
+    <p class="block">
+        List of some of the interesting open-source projects that I am (or was) part of.
+        I am listing here projects that were either (co-)started by me, or I am (or was) one of the core contributors.
+        Projects that are listed here are not in any particular order, but instead serve as a showcase of project types that I enjoy working on.
+    </p>
+
+    {{- partial "bio/project-cards.html" . -}}
+</div>
+{{ end }}

@@ -1,0 +1,13 @@
+{{ define "main" }}
+<div class="posts section">
+    {{ range .Pages }}
+        <article>
+            <h3>{{ .Title }}</h3>
+            {{ partial "metadata.html" . }}
+            <p>{{ .Summary }}</p>
+            <a href="{{ .RelPermalink }}">Read more</a>
+            <hr>
+        </article>
+    {{ end }}
+</div>
+{{ end }}

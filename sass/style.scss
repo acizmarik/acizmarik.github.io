@@ -1,0 +1,7 @@
+@charset "utf-8";
+
+// Override Bulma styles
+$primary: hsl(218, 53%, 53%);
+$footer-padding: 3rem 1.5rem 3rem;
+
+@import "../node_modules/bulma/bulma.sass";
