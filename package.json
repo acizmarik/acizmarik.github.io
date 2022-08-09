@@ -4,6 +4,7 @@
   "description": "Personalized Bulma CSS",
   "main": "sass/style.scss",
   "scripts": {
+    "css-minify": "node-sass --omit-source-map-url sass/style.scss static/styles/style.css --output-style compressed",
     "css-build": "node-sass --omit-source-map-url sass/style.scss static/styles/style.css",
     "css-watch": "npm run css-build -- --watch",
     "start": "npm run css-watch"
