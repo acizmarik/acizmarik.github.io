@@ -7,7 +7,7 @@ layout = "bio"
 enableEmoji = true
 +++
 
-## Hello {{< emoji ":wave:" >}}, 
+## Hello {{% emoji ":wave:" %}}, 
 
 I am Andrej Čižmárik. Currently, I work as a freelance Software Engineer.  
 
