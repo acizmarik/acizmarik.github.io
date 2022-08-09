@@ -2,6 +2,7 @@ baseURL = "http://example.org/"
 languageCode = "en-us"
 title = "Andrej Čižmárik"
 disableKinds = ["taxonomy", "taxonomyTerm"]
+enableRobotsTXT = true
 
 [params]
   mainSections = ["posts"]
