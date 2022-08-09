@@ -31,7 +31,7 @@ jobs:
 
       - name: Build
         run: |
-          npm css-build
+          npm run css-build
           hugo --minify
 
       - name: Deploy
