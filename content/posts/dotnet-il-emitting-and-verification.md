@@ -1,5 +1,5 @@
 +++
-title = "IL Emitting and Verification for .NET"
+title = "IL Emitting and Verification in .NET"
 description = "Approaches on how to verify generated or rewritten IL"
 date = "2022-07-26"
 +++
