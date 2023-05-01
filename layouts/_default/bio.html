@@ -8,33 +8,31 @@
 
     <div class="column is-5">
         <section class="section">
-            <h1>Mgr. Andrej Čižmárik</h1>
+            <h1 class="has-text-centered">{{ .Site.Params.Bio.Header.Title }}</h1>
             </br>
 
-            <div class="has-text-centered">
+            <div class="has-text-centered pb-5">
                 <figure class="image is-128x128 is-inline-block">
-                    <img class="is-rounded" src="/img/photo.jpg">
+                    <img class="is-rounded" src="{{ .Site.Params.Bio.Header.Photo }}">
                 </figure>
             </div>
 
-            <h2>Contacts</h2>
-
-            <span class="icon"><i class="fa fa-map-marker"></i></span> Prague, Czech Republic, EU </br>
-            <span class="icon"><i class="fa fa-envelope"></i></span> 
-                <a href="mailto:info@acizmarik.com" target="_blank">info@acizmarik.com</a>
+            {{ range sort .Site.Params.Bio.Tags ".Weight" }}
+                <span class="icon"> <i class="{{ .Css }}"></i></span>
+                {{ if .Link }}
+                    <a href="{{ .Link }}">{{ .Text }}</a>
+                {{ else }}
+                    {{ .Text }}
+                {{ end }}
                 </br>
-            <span class="icon"><i class="fa fa-linkedin"></i></span> <a href="https://linkedin.com/in/acizmarik">Curriculum Vitae</a> </br>
+            {{ end }}
 
-            <h2>Identification</h2>
+            <h2>Contact</h2>
 
-            I am legally obliged to provide following information. It serves as an identification within the Czech Republic.
+            <p>
+                {{ .Site.Params.Bio.Texts.Description | markdownify }}
+            </p>
 
-            <ul>
-                <li><strong>Name</strong>: Andrej Čižmárik</li>
-                <li><strong>Reg. no. (IČO)</strong>: 09212396</li>
-                <li><i>Fyzická osoba zapsaná v živnostenském rejstříku</i></li>
-                <li><i>Nejsem plátce DPH</i></li>
-            </ul>
         </section>
     </div>
 </div>

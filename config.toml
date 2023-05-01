@@ -6,3 +6,29 @@ enableRobotsTXT = true
 
 [params]
   mainSections = ["posts"]
+
+  [params.bio]
+    [params.bio.header]
+      title = "Mgr. Andrej Čižmárik"
+      photo = "/img/photo.jpg"
+    [params.bio.tags]
+      [params.bio.tags.location]
+        weight = 1
+        css = "fa fa-map-marker"
+        text = "Prague, Czech Republic, EU"
+      [params.bio.tags.company]
+        weight = 2
+        css = "fa fa-building-o"
+        text = "Veeam Software s.r.o."
+      [params.bio.tags.mail]
+        weight = 3
+        css = "fa fa-envelope"
+        text = "info@acizmarik.com"
+        link = "mailto:info@acizmarik.com"
+      [params.bio.tags.linkedin]
+        weight = 4
+        css = "fa fa-linkedin"
+        text = "Curriculum Vitae"
+        link = "https://linkedin.com/in/acizmarik"
+    [params.bio.texts]
+      description = "If you are interested in doing a project together, or just want to ask me anything, let me know! You can [write me a mail](mailto:info@acizmarik.com). If you wish to communicate using encrypted messages, you can use PGP. My fingerprint: [0B2C 76F0 9D28 F4E8 96BA  DDBA 7A84 815B BADC D0D6](/pgp-public.asc)."
