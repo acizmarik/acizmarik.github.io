@@ -1,136 +1,21 @@
-<!doctype html><html><head>
-<meta charset=utf-8>
-<meta http-equiv=x-ua-compatible content="IE=edge">
-<meta name=viewport content="width=device-width,initial-scale=1">
-<link rel=stylesheet href="/styles/style.css?ver=3" type=text/css>
-<link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css type=text/css>
-<title>Andrej Čižmárik</title>
-</head><body><nav class="navbar is-primary" role=navigation aria-label="main navigation">
-<div class=navbar-brand>
-<a class=navbar-item href=/>
-<div style=position:relative>
-<span class=icon><i class="fa fa-home"></i></span>
-<strong>~/acizmarik</strong>
-</div>
-</a>
-<a role=button class=navbar-burger aria-label=menu aria-expanded=false data-target=mainNavbar>
+<!doctype html><html><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=stylesheet href="/styles/style.css?ver=3" type=text/css><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css type=text/css><title>Andrej Čižmárik</title></head><body><nav class="navbar is-primary" role=navigation aria-label="main navigation"><div class=navbar-brand><a class=navbar-item href=/><div style=position:relative><span class=icon><i class="fa fa-home"></i></span>
+<strong>~/acizmarik</strong></div></a><a role=button class=navbar-burger aria-label=menu aria-expanded=false data-target=mainNavbar><span aria-hidden=true></span>
 <span aria-hidden=true></span>
-<span aria-hidden=true></span>
-<span aria-hidden=true></span>
-</a>
-</div>
-<div id=mainNavbar class=navbar-menu>
-<div class=navbar-start>
-</div>
-<div class=navbar-end>
-<a class=navbar-item href=/projects>
-<div style=position:relative>
-<span class=icon><i class="fa fa-code"></i></span>
-<strong>Projects</strong>
-</div>
-</a>
-<a class=navbar-item href=https://github.com/acizmarik>
-<div style=position:relative>
-<span class=icon><i class="fa fa-github"></i></span>
-<strong>GitHub</strong>
-</div>
-</a>
-<a class=navbar-item href=/about>
-<div style=position:relative>
-<span class=icon><i class="fa fa-user"></i></span>
-<strong>About</strong>
-</div>
-</a>
-</div>
-</div>
-</nav><div class="container content" id=content>
-<article class=section>
-<h1>IL Emitting and Verification for .NET</h1>
-<span class=icon><i class="fa fa-calendar"></i></span>
-<time datetime=2022-07-26>Jul 26, 2022</time>
-<br><br>
-<p>Nowadays, we have a couple of options when it comes to the area of code generation. Output of tools, such as Roslyn and Source Generators, that generate source code is easily verifiable &ndash; we can compile it and see if it succeeds. However, generating IL can be a bit harder. Moreover, verifying the generated IL is more complicated, especially if it was generated and emitted during runtime.</p>
-<h2 id=what-is-verifiable-code>What is Verifiable Code?</h2>
-<p>According to the specification (see: <a href=https://www.ecma-international.org/publications-and-standards/standards/ecma-335/>ECMA 335, 6th edition, June 2012, II.3 Validation and verification</a>), in order for IL to be verifiable, it must be both <strong>valid (memory safe)</strong> and <strong>type safe</strong>. These terms should pretty self-explanatory but in the next section we can see some examples for them.</p>
-<h2 id=why-is-verifiability-important>Why is Verifiability Important?</h2>
-<p>Let&rsquo;s assume that we emitted the following method body:</p>
-<p><div class=highlight><div style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4>
-<table style=border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block><tr><td style=vertical-align:top;padding:0;margin:0;border:0>
-<pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code><span style=display:block;width:100%;background-color:#3c3d38><span style="margin-right:.4em;padding:0 .4em;color:#7f7f7f">1
-</span></span><span style="margin-right:.4em;padding:0 .4em;color:#7f7f7f">2
-</span></code></pre></td>
-<td style=vertical-align:top;padding:0;margin:0;border:0;width:100%>
-<pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-csharp data-lang=csharp><span style=display:block;width:100%;background-color:#3c3d38>IL_0000: pop <span style=color:#75715e>// Remove top element from evaluation stack &lt;-- invalid operation (empty stack)
-</span></span><span style=color:#75715e></span>IL_0001: ret <span style=color:#75715e>// Return control flow to the caller
-</span></code></pre></td></tr></table>
-</div>
-</div></p>
-<p>Once JIT compiler tries to compile the method above, an <code>InvalidProgramException</code> gets thrown. Since the first instruction of the method is <code>pop</code>, we are attempting to remove an element from an empty evaluation stack. Therefore, if executed this would result in a stack underflow - which is by no means valid, nor memory safe. This exception generally reveals the signature of the violating method, but not the exact reason (stack underflow on offset <em>IL_0000</em>). Regardless, it at least narrows the problem down to a single method.</p>
-<p>That was not that bad right? It seems like we can trust JIT with identifying invalid (memory unsafe) IL constructs and preventing them from being executed. Now, let&rsquo;s assume a bit more complex example where we will take a look at JIT identifying type unsafe IL:</p>
-<p><div class=highlight><div style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4>
-<table style=border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block><tr><td style=vertical-align:top;padding:0;margin:0;border:0>
-<pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code><span style="margin-right:.4em;padding:0 .4em;color:#7f7f7f">1
-</span><span style=display:block;width:100%;background-color:#3c3d38><span style="margin-right:.4em;padding:0 .4em;color:#7f7f7f">2
-</span></span><span style="margin-right:.4em;padding:0 .4em;color:#7f7f7f">3
-</span></code></pre></td>
-<td style=vertical-align:top;padding:0;margin:0;border:0;width:100%>
-<pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-csharp data-lang=csharp>IL_0000: newobj    instance <span style=color:#66d9ef>void</span> [System.Private.CoreLib]System.Object::.ctor() <span style=color:#75715e>// Create new instance of type &#34;Object&#34; and push it onto stack
-</span><span style=display:block;width:100%;background-color:#3c3d38><span style=color:#75715e></span>IL_0005: call      <span style=color:#66d9ef>void</span> [System.Console]System.Console::WriteLine(<span style=color:#66d9ef>string</span>) <span style=color:#75715e>// Method call &lt;-- invalid operation (types mismatch)
-</span></span><span style=color:#75715e></span>IL_000A: ret</code></pre></td></tr></table>
-</div>
-</div></p>
-<p>JIT compiler would not have any issue with compiling the method above. However, we can clearly see that the code is not type safe. On the first line we create a new instance of <code>object</code> and then call the <code>System.Console::WriteLine(string)</code> overload. Therefore, we are passing a reference to an <code>object</code> instead of a reference to a <code>string</code> as expected by the called method. What&rsquo;s more interesting is that the code even executes and (probably) does not even throw any exceptions.</p>
-<p>Since JIT does not perform type safety checks, we could potentially execute some pretty unsafe IL. What is problematic is that the issue might not get noticed immediately. We could, for example break some internal structures - a problem that would get picked up by the runtime at some point later or not at all. These issues, once identified, tend to end with an <code>ExecutionEngineException</code>. This exception does not tell much apart from the fact that, at some point of the execution, something went horribly wrong.</p>
-<h2 id=ilverify-tool>ILVerify Tool</h2>
-<p>From early .NET versions, there has been a tool called PEVerify. The purpose of the tool was to verify both metadata and IL within dotnet assemblies. However, it has certain flaws or missing features &ndash; mainly the fact that it was meant only for .NET Framework and could not verify the core library (mscorlib). These issues were resolved by an introduction of the tool ILVerify.</p>
-<p>ILVerify can be installed as a dotnet global tool. Just to quickly showcase its capabilities, let&rsquo;s try to verify the methods presented in the previous section. We should see a similar result to the following output:</p>
-<p><div class=highlight><div style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4>
-<table style=border-spacing:0;padding:0;margin:0;border:0;width:auto;overflow:auto;display:block><tr><td style=vertical-align:top;padding:0;margin:0;border:0>
-<pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code><span style="margin-right:.4em;padding:0 .4em;color:#7f7f7f">1
-</span><span style="margin-right:.4em;padding:0 .4em;color:#7f7f7f">2
-</span></code></pre></td>
-<td style=vertical-align:top;padding:0;margin:0;border:0;width:100%>
-<pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-txt data-lang=txt>[IL]: Error [StackUnderflow]: [&lt;path-to-assembly.dll&gt; : P::M1()][offset 0x00000000] Stack underflow.
-[IL]: Error [StackUnexpected]: [&lt;path-to-assembly.dll&gt; : P::M2()][offset 0x00000005][found ref &#39;object&#39;] Unexpected type on the stack.</code></pre></td></tr></table>
-</div>
-</div></p>
-<p>We can see from the output above that ILVerify was able to identify both problems without any issues. Therefore, if we have the modified assembly available, we can just give it to ILVerify and check whether it contains any unverifiable IL. ILVerify does not need to be as fast as JIT compiler &ndash; it can spend more time verifying the code (at the end of the day it is its sole purpose). As a result, we can easily identify also violations of the type safety. Therefore, it is a good idea to to use ILVerify or PEVerify whenever generating or rewriting IL.</p>
-<h2 id=what-about-runtime-il-emitting>What about Runtime IL Emitting?</h2>
-<p>What are the options when we do not have the modified assembly available? After all, we could use <code>System.Reflection.Emit</code> or the Profiling API to emit or even rewrite existing IL during runtime. Therefore, it would be great if we could save the assembly from memory to a file and analyze it offline. This would effectively transform this problem into the previous one, which as we already know can be pretty effectively solved using tools like ILVerify. However, this is exactly the point where it gets a bit complicated.</p>
-<h3 id=missing-support-in-coreclr-to-dump-assemblies>Missing Support in CoreCLR to Dump Assemblies</h3>
-<p>It turns out it is actually not supported since the introduction on .NET Core. And to this day also .NET 5, nor .NET 6 support this. Furthermore, this feature was actually available in .NET Framework and many people would like to see it available in newer frameworks too. Luckily, it seems that it could be finally available in .NET 8 and there is already a prototype implementation (see: <a href=https://github.com/dotnet/runtime/issues/15704#issuecomment-1175353695>github.com/dotnet/runtime/issues/15704</a>). But the questions remains &ndash; what can we do in the meantime?</p>
-<h3 id=partial-workarounds>(Partial) Workarounds</h3>
-<p>In the following subsections, I will try to outline two possible workarounds that could be used until a proper support is implemented by dotnet team. While the following solutions are definitely not perfect, I consider them a good help when investigating mysterious bugs in connection with wrong IL.</p>
-<h4 id=option-1-manual-il-inspections>Option 1: Manual IL Inspections</h4>
-<p>This approach is mainly usable if you are debugging an <code>InvalidProgramException</code>. If we want to inspect IL of a specific method, we can try the following approach to retrieve it from memory:</p>
-<ul>
-<li>Create a memory dump of the analyzed process <code>dotnet-dump collect &lt;pid></code></li>
-<li>Analyze the dump using either <code>dotnet-dump analyze</code> or something like WinDbg</li>
-<li>SOS commands to retrieve IL of a method:
-<ul>
-<li>Find declaring type <code>!name2ee *!MyNamespace.MyType</code> and get the method table address</li>
-<li>Dump method table <code>!dumpMT -md &lt;address></code></li>
-<li>Find the analyzed method and get its address</li>
-<li>Dump method body <code>!dumpIL &lt;address></code></li>
-</ul>
-</li>
-</ul>
-<p>After that we can inspect the IL and corresponding method metadata for any issues. Generally, it is a good idea to try and write generated code first in C#, then compile it and after that try to recreate same IL as Roslyn generated.</p>
-<h4 id=option-2-usage-of-native-coreclr-api>Option 2: Usage of Native CoreCLR API</h4>
-<p>While working on a custom profiler, I discovered an interesting discussion: <a href=https://github.com/dotnet/runtime/issues/37389#issuecomment-511847798>github.com/dotnet/runtime/issues/37389</a>. In one of the comments, there is a described way on how to dump an assembly. Even though I was not able to successfully implement the mentioned steps (yet), I feel like it is a nice solution to obtain assemblies and be able to feed them to ILVerify. Hopefully, someone will be able to implement it and share a working snippet :).</p>
-</article>
-</div><footer class=footer>
-<div class="content has-text-centered">
-<p>
-Built using <a href=https://gohugo.io/>Hugo</a>. Powered by <a href=https://github.com>GitHub</br>
-<a href=/sitemap.xml>
-<span class=icon><i class="fa fa-sitemap"></i></span> Sitemap
+<span aria-hidden=true></span></a></div><div id=mainNavbar class=navbar-menu><div class=navbar-start></div><div class=navbar-end><a class=navbar-item href=/projects><div style=position:relative><span class=icon><i class="fa fa-code"></i></span>
+<strong>Projects</strong></div></a><a class=navbar-item href=https://github.com/acizmarik><div style=position:relative><span class=icon><i class="fa fa-github"></i></span>
+<strong>GitHub</strong></div></a><a class=navbar-item href=/about><div style=position:relative><span class=icon><i class="fa fa-user"></i></span>
+<strong>About</strong></div></a></div></div></nav><div class="container content" id=content><article class=section><h1>IL Emitting and Verification for .NET</h1><span class=icon><i class="fa fa-calendar"></i></span>
+<time datetime=2022-07-26>Jul 26, 2022</time><br><br><p>Nowadays, we have a couple of options when it comes to the area of code generation. Output of tools, such as Roslyn and Source Generators, that generate source code is easily verifiable &ndash; we can compile it and see if it succeeds. However, generating IL can be a bit harder. Moreover, verifying the generated IL is more complicated, especially if it was generated and emitted during runtime.</p><h2 id=what-is-verifiable-code>What is Verifiable Code?</h2><p>According to the specification (see: <a href=https://www.ecma-international.org/publications-and-standards/standards/ecma-335/>ECMA 335, 6th edition, June 2012, II.3 Validation and verification</a>), in order for IL to be verifiable, it must be both <strong>valid (memory safe)</strong> and <strong>type safe</strong>. These terms should pretty self-explanatory but in the next section we can see some examples for them.</p><h2 id=why-is-verifiability-important>Why is Verifiability Important?</h2><p>Let&rsquo;s assume that we emitted the following method body:</p><p><div class=highlight><div style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid><table style=border-spacing:0;padding:0;margin:0;border:0><tr><td style=vertical-align:top;padding:0;margin:0;border:0><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid><code><span style=background-color:#3c3d38><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">1
+</span></span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">2
+</span></code></pre></td><td style=vertical-align:top;padding:0;margin:0;border:0;width:100%><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid><code class=language-csharp data-lang=csharp><span style=display:flex;background-color:#3c3d38><span>IL_0000: pop <span style=color:#75715e>// Remove top element from evaluation stack &lt;-- invalid operation (empty stack)</span>
+</span></span><span style=display:flex><span>IL_0001: ret <span style=color:#75715e>// Return control flow to the caller</span></span></span></code></pre></td></tr></table></div></div></p><p>Once JIT compiler tries to compile the method above, an <code>InvalidProgramException</code> gets thrown. Since the first instruction of the method is <code>pop</code>, we are attempting to remove an element from an empty evaluation stack. Therefore, if executed this would result in a stack underflow - which is by no means valid, nor memory safe. This exception generally reveals the signature of the violating method, but not the exact reason (stack underflow on offset <em>IL_0000</em>). Regardless, it at least narrows the problem down to a single method.</p><p>That was not that bad right? It seems like we can trust JIT with identifying invalid (memory unsafe) IL constructs and preventing them from being executed. Now, let&rsquo;s assume a bit more complex example where we will take a look at JIT identifying type unsafe IL:</p><p><div class=highlight><div style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid><table style=border-spacing:0;padding:0;margin:0;border:0><tr><td style=vertical-align:top;padding:0;margin:0;border:0><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">1
+</span><span style=background-color:#3c3d38><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">2
+</span></span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">3
+</span></code></pre></td><td style=vertical-align:top;padding:0;margin:0;border:0;width:100%><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid><code class=language-csharp data-lang=csharp><span style=display:flex><span>IL_0000: newobj    instance <span style=color:#66d9ef>void</span> [System.Private.CoreLib]System.Object::.ctor() <span style=color:#75715e>// Create new instance of type &#34;Object&#34; and push it onto stack</span>
+</span></span><span style=display:flex;background-color:#3c3d38><span>IL_0005: call      <span style=color:#66d9ef>void</span> [System.Console]System.Console::WriteLine(<span style=color:#66d9ef>string</span>) <span style=color:#75715e>// Method call &lt;-- invalid operation (types mismatch)</span>
+</span></span><span style=display:flex><span>IL_000A: ret</span></span></code></pre></td></tr></table></div></div></p><p>JIT compiler would not have any issue with compiling the method above. However, we can clearly see that the code is not type safe. On the first line we create a new instance of <code>object</code> and then call the <code>System.Console::WriteLine(string)</code> overload. Therefore, we are passing a reference to an <code>object</code> instead of a reference to a <code>string</code> as expected by the called method. What&rsquo;s more interesting is that the code even executes and (probably) does not even throw any exceptions.</p><p>Since JIT does not perform type safety checks, we could potentially execute some pretty unsafe IL. What is problematic is that the issue might not get noticed immediately. We could, for example break some internal structures - a problem that would get picked up by the runtime at some point later or not at all. These issues, once identified, tend to end with an <code>ExecutionEngineException</code>. This exception does not tell much apart from the fact that, at some point of the execution, something went horribly wrong.</p><h2 id=ilverify-tool>ILVerify Tool</h2><p>From early .NET versions, there has been a tool called PEVerify. The purpose of the tool was to verify both metadata and IL within dotnet assemblies. However, it has certain flaws or missing features &ndash; mainly the fact that it was meant only for .NET Framework and could not verify the core library (mscorlib). These issues were resolved by an introduction of the tool ILVerify.</p><p>ILVerify can be installed as a dotnet global tool. Just to quickly showcase its capabilities, let&rsquo;s try to verify the methods presented in the previous section. We should see a similar result to the following output:</p><p><div class=highlight><div style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><table style=border-spacing:0;padding:0;margin:0;border:0><tr><td style=vertical-align:top;padding:0;margin:0;border:0><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:.4em;padding:0 .4em;color:#7f7f7f">2
+</span></code></pre></td><td style=vertical-align:top;padding:0;margin:0;border:0;width:100%><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-txt data-lang=txt><span style=display:flex><span>[IL]: Error [StackUnderflow]: [&lt;path-to-assembly.dll&gt; : P::M1()][offset 0x00000000] Stack underflow.
+</span></span><span style=display:flex><span>[IL]: Error [StackUnexpected]: [&lt;path-to-assembly.dll&gt; : P::M2()][offset 0x00000005][found ref &#39;object&#39;] Unexpected type on the stack.</span></span></code></pre></td></tr></table></div></div></p><p>We can see from the output above that ILVerify was able to identify both problems without any issues. Therefore, if we have the modified assembly available, we can just give it to ILVerify and check whether it contains any unverifiable IL. ILVerify does not need to be as fast as JIT compiler &ndash; it can spend more time verifying the code (at the end of the day it is its sole purpose). As a result, we can easily identify also violations of the type safety. Therefore, it is a good idea to to use ILVerify or PEVerify whenever generating or rewriting IL.</p><h2 id=what-about-runtime-il-emitting>What about Runtime IL Emitting?</h2><p>What are the options when we do not have the modified assembly available? After all, we could use <code>System.Reflection.Emit</code> or the Profiling API to emit or even rewrite existing IL during runtime. Therefore, it would be great if we could save the assembly from memory to a file and analyze it offline. This would effectively transform this problem into the previous one, which as we already know can be pretty effectively solved using tools like ILVerify. However, this is exactly the point where it gets a bit complicated.</p><h3 id=missing-support-in-coreclr-to-dump-assemblies>Missing Support in CoreCLR to Dump Assemblies</h3><p>It turns out it is actually not supported since the introduction on .NET Core. And to this day also .NET 5, nor .NET 6 support this. Furthermore, this feature was actually available in .NET Framework and many people would like to see it available in newer frameworks too. Luckily, it seems that it could be finally available in .NET 8 and there is already a prototype implementation (see: <a href=https://github.com/dotnet/runtime/issues/15704#issuecomment-1175353695>github.com/dotnet/runtime/issues/15704</a>). But the questions remains &ndash; what can we do in the meantime?</p><h3 id=partial-workarounds>(Partial) Workarounds</h3><p>In the following subsections, I will try to outline two possible workarounds that could be used until a proper support is implemented by dotnet team. While the following solutions are definitely not perfect, I consider them a good help when investigating mysterious bugs in connection with wrong IL.</p><h4 id=option-1-manual-il-inspections>Option 1: Manual IL Inspections</h4><p>This approach is mainly usable if you are debugging an <code>InvalidProgramException</code>. If we want to inspect IL of a specific method, we can try the following approach to retrieve it from memory:</p><ul><li>Create a memory dump of the analyzed process <code>dotnet-dump collect &lt;pid></code></li><li>Analyze the dump using either <code>dotnet-dump analyze</code> or something like WinDbg</li><li>SOS commands to retrieve IL of a method:<ul><li>Find declaring type <code>!name2ee *!MyNamespace.MyType</code> and get the method table address</li><li>Dump method table <code>!dumpMT -md &lt;address></code></li><li>Find the analyzed method and get its address</li><li>Dump method body <code>!dumpIL &lt;address></code></li></ul></li></ul><p>After that we can inspect the IL and corresponding method metadata for any issues. Generally, it is a good idea to try and write generated code first in C#, then compile it and after that try to recreate same IL as Roslyn generated.</p><h4 id=option-2-usage-of-native-coreclr-api>Option 2: Usage of Native CoreCLR API</h4><p>While working on a custom profiler, I discovered an interesting discussion: <a href=https://github.com/dotnet/runtime/issues/37389#issuecomment-511847798>github.com/dotnet/runtime/issues/37389</a>. In one of the comments, there is a described way on how to dump an assembly. Even though I was not able to successfully implement the mentioned steps (yet), I feel like it is a nice solution to obtain assemblies and be able to feed them to ILVerify. Hopefully, someone will be able to implement it and share a working snippet :).</p></article></div><footer class=footer><div class="content has-text-centered"><p>Built using <a href=https://gohugo.io/>Hugo</a>. Powered by <a href=https://github.com>GitHub</br><a href=/sitemap.xml><span class=icon><i class="fa fa-sitemap"></i></span> Sitemap
 </a>|
-<a href=/posts/index.xml>
-<span class=icon><i class="fa fa-rss"></i></span> RSS feed
-</a></br>
-All rights reserved
-</p>
-</div>
-</footer> <script src=/js/theme-script.js></script></body>
-</html>
+<a href=/posts/index.xml><span class=icon><i class="fa fa-rss"></i></span> RSS feed</a></br>All rights reserved</p></div></footer><script src=/js/theme-script.js></script></body></html>
